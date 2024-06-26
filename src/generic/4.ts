@@ -1,20 +1,60 @@
-/*
-  Використовуйте generics та інтерфейси, щоб виправити помилку в наступних класах:
-*/
-interface PageProps {
-  title:string
-}
+class QueryBuilder {
+  private table: string = '';
+  private whereParams: string[] = [];
+  private orderBy: string = '';
 
-class Component<T> {
-  constructor (public props:T) {
+  from(table: string): QueryBuilder {
+    this.table = table;
+    return this;
+  }
 
+  where(condition: string): QueryBuilder {
+    this.whereParams.push(condition);
+    return this;
+  }
+
+  order(condition: string): QueryBuilder {
+    this.orderBy = condition;
+    return this;
+  }
+
+  build(): DatabaseQuery {
+    return new DatabaseQuery(this.table, this.whereParams, this.orderBy);
   }
 }
 
-class Page extends Component<PageProps> {
-  pageInfo ():void {
-    console.log(this.props.title);
+class DatabaseQuery {
+  constructor(
+    private table: string,
+    private whereParams: string[],
+    private orderBy: string
+  ) {}
+
+  query(): void {
+    let query = `SELECT * FROM ${this.table}`;
+
+    if (this.whereParams.length) {
+      query += ` WHERE ${this.whereParams.join(' AND ')}`;
+    }
+
+    if (this.orderBy) {
+      query += ` ORDER BY ${this.orderBy}`;
+    }
+
+    // Тут ми виконуємо запит до бази даних, наразі лише виводимо текст запиту.
+    console.log(`Executing query: ${query}`);
   }
 }
+
+// Використання
+const builder = new QueryBuilder();
+const dbQuery = builder
+  .from('Users')
+  .where('age > 21')
+  .where('status = "active"')
+  .order('lastName')
+  .build();
+
+dbQuery.query(); // Executing query: SELECT * FROM Users WHERE age > 21 AND status = "active" ORDER BY lastName
 
 export {};
